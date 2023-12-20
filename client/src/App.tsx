@@ -6,7 +6,6 @@ import { saveAs } from "file-saver";
 const sockets = io("http://localhost:8000");
 
 function App() {
-  const [receivedData, setReceivedData] = useState<any>();
   const [signalStatus, setSignalStatus] = useState("Not accepted");
   const [myID, setMyID] = useState<string>("no");
   const [partnerId, setPartnerId] = useState<string>("no");
@@ -15,8 +14,9 @@ function App() {
   const [fileInput, setFileInput] = useState<any>();
   const [receivedFiles, setReceivedFiles] = useState<any[]>([]);
   const peerRef = useRef<any>();
-  const [rawData, setrawData] = useState<any>();
-  const [fileNameState, setfileNameState] = useState<any>("");
+  const [rawData, setRawData] = useState<any>();
+  const [fileNameState, setFileNameState] = useState<any>("");
+  const [transferProgress, setTransferProgress] = useState<number>(0);
 
   useEffect(() => {
     sockets.on("signaling", (data) => {
@@ -25,6 +25,16 @@ function App() {
       setSignalingData(data);
       setPartnerId(data.from);
     });
+
+    // Cleanup function when the component unmounts
+    return () => {
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        setAcceptCaller(false);
+        setSignalStatus("Not accepted");
+        setReceivedFiles([]);
+      }
+    };
   }, []);
 
   const setUserID = () => {
@@ -66,20 +76,14 @@ function App() {
     });
 
     peer.on("data", (data) => {
-      if (data instanceof ArrayBuffer) {
-        setReceivedData(data);
-        console.log("Received file data:", data);
-      } else {
-        console.log("Received data:", data);
-        handleReceivingData(data)
-      }
+      console.log("Received data:", data);
+      handleReceivingData(data);
     });
 
     sockets.on("callAccepted", (data) => {
       peer.signal(data.signalData);
       setSignalStatus("Signal accepted");
     });
-
   };
 
   const acceptCall = () => {
@@ -101,28 +105,16 @@ function App() {
 
     peer.on("data", (data) => {
       console.log("Accept call fnc");
-      if (data instanceof ArrayBuffer) {
-        setReceivedData(data);
-        console.log("Received file data:", data);
-        // Save received file for download
-        const newFile = { data, name: `ReceivedFile_${Date.now()}.txt` };
-        setReceivedFiles((prevFiles) => [...prevFiles, newFile]);
-      } else {
-        // console.log("Received data:", data);
-        // console.log(data.toString());
-        // const json = new TextDecoder("utf-8").decode(data)
-        handleReceivingData(data);
-        // setrawData(data);
-      }
+      handleReceivingData(data);
     });
   };
 
   function handleReceivingData(data: any) {
     if (data.toString().includes("done")) {
       const parsed = JSON.parse(data);
-      setfileNameState(parsed.fileName);
+      setFileNameState(parsed.fileName);
     } else {
-      setrawData(data);
+      setRawData(data);
     }
   }
 
@@ -132,34 +124,42 @@ function App() {
   };
 
   const selectFiles = () => {
-    console.log(fileInput[0]);
     const peer = peerRef.current;
-    const stream = fileInput[0].stream();
-    const reader = stream.getReader();
-    const tempReader = new FileReader();
+    const file = fileInput[0];
 
-    reader.read().then((obj) => {
-      handlereading(obj.done, obj.value);
-    });
+    const chunkSize = 16 * 1024; // 16 KB chunks (you can adjust this size)
+    let offset = 0;
 
-    function handlereading(done, value) {
-      if (done) {
-        peer.write(JSON.stringify({ done: true, fileName: fileInput[0].name }));
-        return;
-      }
+    const readAndSendChunk = () => {
+      const chunk = file.slice(offset, offset + chunkSize);
+      const reader = new FileReader();
 
-      peer.write(value);
-      reader.read().then((obj) => {
-        handlereading(obj.done, obj.value);
-      });
-    }
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const chunkData = event.target.result;
 
-    tempReader.onload = () => {
-      const fileData = tempReader.result;
-      peer.send(fileData);
+          // Convert chunkData to a Uint8Array
+          const uint8ArrayChunk = new Uint8Array(chunkData);
+
+          peer.write(uint8ArrayChunk);
+
+          offset += chunkSize;
+
+          const progress = (offset / file.size) * 100;
+          setTransferProgress(progress);
+
+          if (offset < file.size) {
+            readAndSendChunk(); // Continue reading and sending chunks
+          } else {
+            peer.write(JSON.stringify({ done: true, fileName: file.name }));
+          }
+        }
+      };
+
+      reader.readAsArrayBuffer(chunk);
     };
-    tempReader.readAsArrayBuffer(fileInput[0]);
-    console.log("from handle reading func", tempReader);
+
+    readAndSendChunk();
   };
 
   return (
@@ -197,6 +197,10 @@ function App() {
           </button>
         </>
       ) : null}
+      <br />
+      {transferProgress > 0 && transferProgress < 100 && (
+        <p>Transfer Progress: {transferProgress.toFixed(2)}%</p>
+      )}
     </>
   );
 }
