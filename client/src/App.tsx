@@ -76,8 +76,24 @@ function App() {
     });
 
     peer.on("data", (data) => {
-      console.log("Received data:", data);
-      handleReceivingData(data);
+      console.log(data);
+      // Parse received data
+      const parsedData = JSON.parse(data);
+
+      if (parsedData.chunk) {
+        // Handle the received chunk
+        handleReceivingData(parsedData.chunk);
+
+        // Update progress on the receiver's side
+        const receivedProgress = parsedData.progress;
+        setTransferProgress(receivedProgress);
+      } else if (parsedData.done) {
+        // Handle the end of the file transfer
+        handleReceivingData(parsedData);
+
+        // Reset progress on the receiver's side
+        setTransferProgress(0);
+      }
     });
 
     sockets.on("callAccepted", (data) => {
@@ -104,14 +120,31 @@ function App() {
     peer.signal(signalingData.signalData);
 
     peer.on("data", (data) => {
-      console.log("Accept call fnc");
-      handleReceivingData(data);
+      // Parse received data
+      console.log(data);
+      const parsedData = JSON.parse(data);
+
+      if (parsedData.chunk) {
+        // Handle the received chunk
+        handleReceivingData(parsedData.chunk);
+
+        // Update progress on the receiver's side
+        const receivedProgress = parsedData.progress;
+        setTransferProgress(receivedProgress);
+      } else if (parsedData.done) {
+        // Handle the end of the file transfer
+        console.log(parsedData);
+        handleReceivingData(parsedData);
+
+        // Reset progress on the receiver's side
+        setTransferProgress(0);
+      }
     });
   };
 
   function handleReceivingData(data: any) {
-    if (data.toString().includes("done")) {
-      const parsed = JSON.parse(data);
+    if (data.done) {
+      const parsed = data;
       setFileNameState(parsed.fileName);
     } else {
       setRawData(data);
@@ -137,21 +170,25 @@ function App() {
       reader.onload = (event) => {
         if (event.target?.result) {
           const chunkData = event.target.result;
-
-          // Convert chunkData to a Uint8Array
           const uint8ArrayChunk = new Uint8Array(chunkData);
 
-          peer.write(uint8ArrayChunk);
+          // Send the chunk data along with the progress information
+          const progressPayload = {
+            chunk: uint8ArrayChunk,
+            progress: (offset / file.size) * 100,
+          };
+
+          peer.write(JSON.stringify(progressPayload));
+          setTransferProgress((offset/file.size)*100)
 
           offset += chunkSize;
-
-          const progress = (offset / file.size) * 100;
-          setTransferProgress(progress);
 
           if (offset < file.size) {
             readAndSendChunk(); // Continue reading and sending chunks
           } else {
+            // Signal the end of the file transfer
             peer.write(JSON.stringify({ done: true, fileName: file.name }));
+            setTransferProgress(100)
           }
         }
       };
