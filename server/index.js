@@ -14,7 +14,7 @@ app.get("/",(req,res)=>{
 
 const io = new Server(httpServer,{
   cors: {
-    origin: "http://localhost:5173"
+    origin: "http://localhost:3000"
   }
 })
 
@@ -23,7 +23,7 @@ const usersToUniquedID = new Map();
 const uniqueIdTousers = new Map();
 
 io.on("connection",(socket)=>{
-  
+  // console.log(socket.id);
   socket.on("joinRoom",(temp)=>{
     socket.join(Number(temp))
     records.set(socket.id,Number(temp))
