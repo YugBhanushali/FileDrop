@@ -18,8 +18,10 @@ import Peer from "simple-peer";
 import { useRouter } from "next/navigation";
 import { Progress } from "./ui/progress";
 import { saveAs } from "file-saver";
+import FileUpload from "./FileUpload";
 
 const ShareCard = () => {
+  const rounter = useRouter();
   const userDetails = useSocket();
   const [partnerId, setpartnerId] = useState("");
   const [isLoading, setisLoading] = useState(false);
@@ -32,10 +34,12 @@ const ShareCard = () => {
   const [fileUpload, setfileUpload] = useState<any>();
   const fileInputRef = useRef<any>();
   const [downloadFile, setdownloadFile] = useState<any>();
-  const [fileProgress, setfileProgress] = useState<number>(0);
+  const [fileUploadProgress, setfileUploadProgress] = useState<number>(0);
+  const [fileDownloadProgress, setfileDownloadProgress] = useState<number>(0);
   const [fileNameState, setfileNameState] = useState<any>();
   const [fileChunkArr, setfileChunkArr] = useState<Uint8Array>();
   const [fileSending, setfileSending] = useState(false);
+  const [fileReceiving, setfileReceiving] = useState(false);
 
   const addUserToSocketDB = () => {
     console.log("add user");
@@ -66,10 +70,11 @@ const ShareCard = () => {
     });
 
     return () => {
+      peerRef.current?.destroy();
       if (peerRef.current) {
-        peerRef.current.destroy();
         setacceptCaller(false);
         setacceptCaller(false);
+        userDetails.socket.off();
       }
     };
   }, []);
@@ -93,7 +98,6 @@ const ShareCard = () => {
         ],
       },
     });
-
     peerRef.current = peer;
 
     //send the signal via socket
@@ -107,6 +111,7 @@ const ShareCard = () => {
 
     peer.on("data", (data) => {
       console.log(data);
+      setfileReceiving(true);
       // Parse received data
       const parsedData = JSON.parse(data);
 
@@ -116,13 +121,15 @@ const ShareCard = () => {
 
         // Update progress on the receiver's side
         const receivedProgress = parsedData.progress;
-        setfileProgress(receivedProgress);
+        setfileDownloadProgress(receivedProgress);
       } else if (parsedData.done) {
         // Handle the end of the file transfer
         handleReceivingData(parsedData);
-
+        setfileChunkArr(undefined);
         // Reset progress on the receiver's side
-        setfileProgress(0);
+        setfileDownloadProgress(0);
+        setfileReceiving(false);
+        toast.success("File received successfully")
       }
     });
 
@@ -135,8 +142,19 @@ const ShareCard = () => {
       toast.success(`Successful connection with ${partnerId}`);
     });
 
-    //receive data
-    //peer.on data
+    peer.on('close', () => {
+      console.log(`${partnerId} disconnected`);
+      // Handle the disconnection, e.g., remove UI elements, update state, etc.
+      setpartnerId("");
+      setcurrentConnection(false);
+      toast.error(`${partnerId} disconnected`);
+      setfileUpload(false)
+      setterminateCall(false)
+    });
+
+    peer.on("error", (err) => {
+      console.log(err);
+    });
   };
 
   const acceptUser = () => {
@@ -161,6 +179,7 @@ const ShareCard = () => {
 
     peer.on("data", (data) => {
       // Parse received data
+      setfileReceiving(true);
       const parsedData = JSON.parse(data);
 
       if (parsedData.chunk) {
@@ -169,18 +188,33 @@ const ShareCard = () => {
 
         // Update progress on the receiver's side
         const receivedProgress = parsedData.progress;
-        setfileProgress(receivedProgress);
+        setfileDownloadProgress(receivedProgress);
       } else if (parsedData.done) {
         // Handle the end of the file transfer
         handleReceivingData(parsedData);
-
+        setfileChunkArr(undefined);
         // Reset progress on the receiver's side
-        setfileProgress(0);
+        setfileDownloadProgress(0);
+        setfileReceiving(false);
       }
     });
 
     //verify the signal of the caller
     peer.signal(signalingData.signalData);
+
+    peer.on('close', () => {
+      console.log(`${partnerId} disconnected`);
+      // Handle the disconnection, e.g., remove UI elements, update state, etc.
+      setpartnerId("");
+      setcurrentConnection(false);
+      toast.error(`${partnerId} disconnected`);
+      setfileUpload(false)
+      setterminateCall(false)
+    });
+
+    peer.on("error", (err) => {
+      console.log(err);
+    });
   };
 
   const handleConnectionMaking = () => {
@@ -225,7 +259,6 @@ const ShareCard = () => {
   }
 
   const handleWebRTCUpload = () => {
-    setfileSending(true);
     const peer = peerRef.current;
     const file = fileUpload[0];
     const chunkSize = 16 * 1024; // 16 KB chunks (you can adjust this size)
@@ -234,6 +267,10 @@ const ShareCard = () => {
     const readAndSendChunk = () => {
       const chunk = file.slice(offset, offset + chunkSize);
       const reader = new FileReader();
+
+      if (offset == 0) {
+        setfileSending(true);
+      }
 
       reader.onload = (event) => {
         if (event.target?.result) {
@@ -247,7 +284,7 @@ const ShareCard = () => {
           };
           console.log(progressPayload);
           peer.write(JSON.stringify(progressPayload));
-          setfileProgress((offset / file.size) * 100);
+          setfileUploadProgress((offset / file.size) * 100);
 
           offset += chunkSize;
 
@@ -256,7 +293,9 @@ const ShareCard = () => {
           } else {
             // Signal the end of the file transfer
             peer.write(JSON.stringify({ done: true, fileName: file.name }));
-            setfileProgress(100);
+            setfileUploadProgress(100);
+            setfileSending(false);
+            toast.success("Sended file successfully")
           }
         }
       };
@@ -265,7 +304,6 @@ const ShareCard = () => {
     };
 
     readAndSendChunk();
-    setfileSending(false);
   };
 
   const handleFileDownload = (fileRawData: any, tempFile: any) => {
@@ -346,6 +384,9 @@ const ShareCard = () => {
                         variant="outline"
                         type="button"
                         className="p-4 w-[160px] text-red-600 border-red-400 hover:bg-red-300 animate-in slide-in-from-right-[30px]"
+                        onClick={()=>{
+                          peerRef.current.destroy();
+                        }}
                       >
                         Terminate
                       </Button>
@@ -356,6 +397,9 @@ const ShareCard = () => {
 
               {/* file upload */}
               <div className="flex flex-col border rounded-lg  px-3 py-2 text-sm w-full ease-in-out duration-500 transition-all gap-y-2">
+                <div>
+                  <Label className=" font-semibold text-[16px]">Upload</Label>
+                </div>
                 <div>
                   <Input
                     type="file"
@@ -375,81 +419,96 @@ const ShareCard = () => {
                 </div>
 
                 {fileUpload ? (
-                  <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
-                    <div className="flex justify-between items-center">
-                      <div className="flex">{fileUpload[0]?.name}</div>
-                      <div className="flex">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-[30px] px-2"
-                          onClick={handleWebRTCUpload}
-                        >
-                          <Upload size={15} />
-                        </Button>
-                      </div>
-                    </div>
+                  // <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
+                  //   <div className="flex justify-between items-center">
+                  //     <div className="flex">{fileUpload[0]?.name}</div>
+                  //     <div className="flex">
+                  //       <Button
+                  //         type="button"
+                  //         variant="outline"
+                  //         className="h-[30px] px-2"
+                  //         onClick={() => {
+                  //           handleWebRTCUpload();
+                  //         }}
+                  //       >
+                  //         <Upload size={15} />
+                  //       </Button>
+                  //     </div>
+                  //   </div>
 
-                    <div>
-                      <Progress
-                        value={fileProgress}
-                        className="h-1 bg-gray-200"
-                      />
-                    </div>
-                  </div>
+                  //   {fileSending ? (
+                  //     <div>
+                  //       <Progress
+                  //         value={fileUploadProgress}
+                  //         className="h-1 bg-gray-200"
+                  //       />
+                  //     </div>
+                  //   ) : null}
+                  // </div>
+                  <FileUpload
+                    fileName={fileUpload[0]?.name}
+                    fileProgress={fileUploadProgress}
+                    handleClick={handleWebRTCUpload}
+                    showProgress={fileSending}
+                  />
                 ) : null}
               </div>
 
               {/* download file */}
               {downloadFile ? (
-                <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex">{fileNameState}</div>
-                    <div className="flex">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-[30px] px-2"
-                        onClick={() =>
-                          handleFileDownload(downloadFile, fileNameState)
-                        }
-                      >
-                        <Download size={15} />
-                      </Button>
-                    </div>
-                  </div>
-
+                <div className="flex flex-col border rounded-lg  px-3 py-3 w-full gap-y-2">
                   <div>
-                    <Progress
-                      value={fileProgress}
-                      className="h-1 bg-gray-200"
-                    />
+                    <Label className=" font-semibold text-[16px]">
+                      Download
+                    </Label>
+                  </div>
+                  <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
+                    <div className="flex justify-between items-center">
+                      <div className="flex">
+                        {fileReceiving ? "Receiving..." : fileNameState}
+                      </div>
+                      <div className="flex">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-[30px] px-2"
+                          onClick={() =>
+                            handleFileDownload(downloadFile, fileNameState)
+                          }
+                        >
+                          <Download size={15} />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {fileReceiving ? (
+                      <div>
+                        <Progress
+                          value={fileDownloadProgress}
+                          className="h-1 bg-gray-200"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ) : null}
             </div>
           </form>
         </CardContent>
-        {/* <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button>Deploy</Button>
-          <div className="rounded-full bg-green-600 h-2 w-2 animate-ping">
-            <div className="rounded-full bg-green-600 h-1 w-1"></div>
-          </div>
-        </CardFooter> */}
-      </Card>
-
-      <div>
         {acceptCaller ? (
-          <Button
-            variant="outline"
-            className=" bg-green-500 text-white hover:bg-green-400"
-            onClick={acceptUser}
-          >
-            Getting call from {signalingData.from}
-          </Button>
+          <CardFooter className="flex justify-center">
+            <div>
+              <Button
+                variant="outline"
+                className=" bg-green-500 text-white hover:bg-green-400"
+                onClick={acceptUser}
+              >
+                Getting call from {signalingData.from}
+              </Button>
+            </div>
+          </CardFooter>
         ) : null}
-      </div>
+      </Card>
     </>
   );
 };

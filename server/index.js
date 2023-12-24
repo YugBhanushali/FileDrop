@@ -68,7 +68,30 @@ io.on("connection",(socket)=>{
       to:temp.to
   })
   })
+
+  socket.on('disconnect', () => {
+    console.log(`Socket disconnected: ${socket.id}`);
+    
+    // Remove the disconnected socket ID from maps
+    const user = socket.id;
+    const uniqueId = usersToUniquedID.get(user);
+    
+    usersToUniquedID.delete(user);
+    uniqueIdTousers.delete(uniqueId);
+
+    // Log the updated maps
+    console.log("Updated usersToUniquedID:");
+    for (let [key, value] of usersToUniquedID) {
+      console.log(key + " = " + value);
+    }
+
+    console.log("Updated uniqueIdTousers:");
+    for (let [key, value] of uniqueIdTousers) {
+      console.log(key + " = " + value);
+    }
+  });
 })
+
 
 httpServer.listen(8000,()=>{
   console.log("Listining on 8000");
