@@ -47,10 +47,11 @@ const ShareCard = () => {
 
   const addUserToSocketDB = () => {
     console.log("add user");
-    console.log(userDetails.socket.id);
-    userDetails.socket.emit("details", {
-      socketId: userDetails.socket.id,
-      uniqueId: userDetails.userId,
+    userDetails.socket.on("connect", () => {
+      userDetails.socket.emit("details", {
+        socketId: userDetails.socket.id,
+        uniqueId: userDetails.userId,
+      });
     });
   };
 
@@ -313,7 +314,7 @@ const ShareCard = () => {
 
   return (
     <>
-      <Card className="w-[550px]">
+      <Card className="w-[450px]">
         <CardHeader>
           {/* <CardTitle>Create project</CardTitle>
           <CardDescription>
