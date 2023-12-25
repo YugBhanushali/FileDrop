@@ -104,7 +104,8 @@ const ShareCard = () => {
       },
     });
     peerRef.current = peer;
-
+    
+    
     //send the signal via socket
     peer.on("signal", (data) => {
       userDetails.socket.emit("send-signal", {
@@ -145,6 +146,7 @@ const ShareCard = () => {
       setcurrentConnection(true);
       setterminateCall(true);
       toast.success(`Successful connection with ${partnerId}`);
+      userDetails.setpeerState(peer)
     });
 
     peer.on("close", () => {
@@ -155,6 +157,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
+      userDetails.setpeerState(undefined)
     });
 
     peer.on("error", (err) => {
@@ -169,7 +172,7 @@ const ShareCard = () => {
     });
 
     peerRef.current = peer;
-
+    userDetails.setpeerState(peer)
     //send the signal to caller
     peer.on("signal", (data) => {
       userDetails.socket.emit("accept-signal", {
@@ -215,6 +218,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
+      userDetails.setpeerState(undefined)
     });
 
     peer.on("error", (err) => {
@@ -337,7 +341,7 @@ const ShareCard = () => {
                     variant="outline"
                     type="button"
                     className="p-4"
-                    onClick={() => CopyToClipboard(userDetails.userId)}
+                    onClick={() => CopyToClipboard(userDetails?.userId)}
                   >
                     {isCopied ? (
                       <Check size={15} color="green" />
@@ -381,9 +385,9 @@ const ShareCard = () => {
                   <>
                     {terminateCall ? (
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         type="button"
-                        className="p-4 w-[160px] text-red-600 border-red-400 hover:bg-red-300 animate-in slide-in-from-right-[30px]"
+                        // className="p-4 w-[160px] text-red-600 border-red-400 hover:bg-red-300 animate-in slide-in-from-right-[30px]"
                         onClick={() => {
                           peerRef.current.destroy();
                         }}
