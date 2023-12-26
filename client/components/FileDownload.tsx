@@ -49,7 +49,7 @@ const FileDownload = ({
             <div>
               <Progress
                 value={fileProgress}
-                className="h-1 bg-gray-200"
+                className="h-1"
               />
             </div>
           ) : null}

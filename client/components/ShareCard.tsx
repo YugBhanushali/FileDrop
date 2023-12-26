@@ -16,16 +16,11 @@ import toast from "react-hot-toast";
 import { TailSpin } from "react-loader-spinner";
 import Peer from "simple-peer";
 import { useRouter } from "next/navigation";
-import { Progress } from "./ui/progress";
-import { saveAs } from "file-saver";
 import FileUpload from "./FileUpload";
 import FileUploadBtn from "./FileUploadBtn";
 import FileDownload from "./FileDownload";
-import { io } from "socket.io-client";
-
 
 const ShareCard = () => {
-  const rounter = useRouter();
   const userDetails = useSocket();
   const [partnerId, setpartnerId] = useState("");
   const [isLoading, setisLoading] = useState(false);
@@ -48,6 +43,7 @@ const ShareCard = () => {
   const addUserToSocketDB = () => {
     console.log("add user");
     userDetails.socket.on("connect", () => {
+      console.log(userDetails.socket.id);
       userDetails.socket.emit("details", {
         socketId: userDetails.socket.id,
         uniqueId: userDetails.userId,
@@ -73,7 +69,7 @@ const ShareCard = () => {
       setsignalingData(data);
       setpartnerId(data.from);
     });
-    
+
     return () => {
       peerRef.current?.destroy();
       if (peerRef.current) {
@@ -104,8 +100,7 @@ const ShareCard = () => {
       },
     });
     peerRef.current = peer;
-    
-    
+
     //send the signal via socket
     peer.on("signal", (data) => {
       userDetails.socket.emit("send-signal", {
@@ -146,7 +141,7 @@ const ShareCard = () => {
       setcurrentConnection(true);
       setterminateCall(true);
       toast.success(`Successful connection with ${partnerId}`);
-      userDetails.setpeerState(peer)
+      userDetails.setpeerState(peer);
     });
 
     peer.on("close", () => {
@@ -157,7 +152,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
-      userDetails.setpeerState(undefined)
+      userDetails.setpeerState(undefined);
     });
 
     peer.on("error", (err) => {
@@ -172,7 +167,7 @@ const ShareCard = () => {
     });
 
     peerRef.current = peer;
-    userDetails.setpeerState(peer)
+    userDetails.setpeerState(peer);
     //send the signal to caller
     peer.on("signal", (data) => {
       userDetails.socket.emit("accept-signal", {
@@ -218,7 +213,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
-      userDetails.setpeerState(undefined)
+      userDetails.setpeerState(undefined);
     });
 
     peer.on("error", (err) => {
@@ -252,7 +247,7 @@ const ShareCard = () => {
       setfileChunkArr((prevFileData: Uint8Array | undefined) => {
         const prevFileLen = prevFileData ? prevFileData.length : 0;
         const newArray = new Uint8Array(prevFileLen + tempChunkArr.length);
-
+        console.log(tempChunkArr);
         if (prevFileData) {
           newArray.set(prevFileData, 0); // Copy existing data
           tempChunkArr.forEach(
@@ -309,12 +304,12 @@ const ShareCard = () => {
         }
       };
 
+      // If the chunk size is greater than the remaining file size, read the entire remaining file
       reader.readAsArrayBuffer(chunk);
     };
 
     readAndSendChunk();
   };
-
 
   return (
     <>

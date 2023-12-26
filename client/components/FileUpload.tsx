@@ -36,7 +36,9 @@ const FileUpload = ({
 
       {showProgress ? (
         <div>
-          <Progress value={fileProgress} className="h-1 bg-gray-200" />
+          <Progress value={fileProgress} 
+          className="h-1" 
+          />
         </div>
       ) : null}
     </div>

@@ -5,10 +5,10 @@ import { Toaster } from "react-hot-toast";
 
 const page = () => {
   return (
-    <>
+    <SocketProvider>
       <Share />
       <Toaster />
-    </>
+    </SocketProvider>
   );
 };
 
