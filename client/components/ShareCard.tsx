@@ -43,7 +43,7 @@ const ShareCard = () => {
   const addUserToSocketDB = () => {
     console.log("add user");
     userDetails.socket.on("connect", () => {
-      console.log(userDetails.socket.id);
+      console.log(userDetails.socket.id,userDetails.userId);
       userDetails.socket.emit("details", {
         socketId: userDetails.socket.id,
         uniqueId: userDetails.userId,
