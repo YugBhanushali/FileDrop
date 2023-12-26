@@ -15,10 +15,10 @@ import { useSocket } from "@/context/SocketProvider";
 import toast from "react-hot-toast";
 import { TailSpin } from "react-loader-spinner";
 import Peer from "simple-peer";
-import { useRouter } from "next/navigation";
 import FileUpload from "./FileUpload";
 import FileUploadBtn from "./FileUploadBtn";
 import FileDownload from "./FileDownload";
+import streamSaver from "streamsaver";
 
 const ShareCard = () => {
   const userDetails = useSocket();
@@ -39,11 +39,13 @@ const ShareCard = () => {
   const [fileChunkArr, setfileChunkArr] = useState<Uint8Array>();
   const [fileSending, setfileSending] = useState(false);
   const [fileReceiving, setfileReceiving] = useState(false);
+  const [chunk, setchunk] = useState<Array<number>>();
+  const workerRef = useRef<Worker>();
 
   const addUserToSocketDB = () => {
     console.log("add user");
     userDetails.socket.on("connect", () => {
-      console.log(userDetails.socket.id,userDetails.userId);
+      console.log(userDetails.socket.id, userDetails.userId);
       userDetails.socket.emit("details", {
         socketId: userDetails.socket.id,
         uniqueId: userDetails.userId,
@@ -61,6 +63,10 @@ const ShareCard = () => {
   }
 
   useEffect(() => {
+    workerRef.current = new Worker(
+      new URL("../utils/worker.ts", import.meta.url)
+    );
+
     addUserToSocketDB();
 
     userDetails.socket.on("signaling", (data: any) => {
@@ -131,6 +137,8 @@ const ShareCard = () => {
         setfileDownloadProgress(0);
         setfileReceiving(false);
         toast.success("File received successfully");
+      } else if (parsedData.info) {
+        handleReceivingData(parsedData);
       }
     });
 
@@ -191,14 +199,16 @@ const ShareCard = () => {
 
         // Update progress on the receiver's side
         const receivedProgress = parsedData.progress;
-        setfileDownloadProgress(receivedProgress);
+        // setfileDownloadProgress(receivedProgress);
       } else if (parsedData.done) {
         // Handle the end of the file transfer
         handleReceivingData(parsedData);
         setfileChunkArr(undefined);
         // Reset progress on the receiver's side
-        setfileDownloadProgress(0);
-        setfileReceiving(false);
+        // setfileDownloadProgress(0);
+        // setfileReceiving(false);
+      } else if (parsedData.info) {
+        handleReceivingData(parsedData);
       }
     });
 
@@ -235,32 +245,81 @@ const ShareCard = () => {
     console.log(fileUpload);
   };
 
+  //for the file which have small size around less than 20mb
+  // function handleReceivingData(data: any) {
+  //   if (data.done) {
+  //     const parsed = data;
+  //     setfileNameState(parsed.fileName);
+  //   } else {
+  //     const chunkIndices = Object.keys(data).map(Number);
+  //     const maxIndex = Math.max(...chunkIndices);
+  //     const tempChunkArr: Uint8Array = new Uint8Array(maxIndex + 1);
+  //     chunkIndices.forEach((index) => (tempChunkArr[index] = data[index]));
+  //     setfileChunkArr((prevFileData: Uint8Array | undefined) => {
+  //       const prevFileLen = prevFileData ? prevFileData.length : 0;
+  //       const newArray = new Uint8Array(prevFileLen + tempChunkArr.length);
+  //       console.log(newArray.length * newArray.BYTES_PER_ELEMENT);
+  //       console.log(data);
+  //       if (prevFileData) {
+  //         newArray.set(prevFileData, 0); // Copy existing data
+  //         tempChunkArr.forEach(
+  //           (byte, index) => (newArray[prevFileData.length + index] = byte)
+  //         );
+  //       } else {
+  //         return tempChunkArr;
+  //       }
+  //       setdownloadFile(newArray);
+  //       return newArray;
+  //     });
+  //   }
+  // }
+
+  // for the files which has large sizes
   function handleReceivingData(data: any) {
-    if (data.done) {
+    if (data.info) {
+      workerRef.current?.postMessage({
+        status: "fileInfo",
+        fileSize: data.fileSize,
+      });
+    } else if (data.done) {
       const parsed = data;
       setfileNameState(parsed.fileName);
+      const fileSize = parsed.fileSize;
+      workerRef.current?.postMessage("download");
+      // workerRef.current?.addEventListener("message", (finalData: any) => {
+      //   if (finalData.data?.blob) {
+      //     console.log(finalData);
+      //     setdownloadFile(finalData.data?.blob);
+      //     console.log(finalData.data?.timeTaken);
+      //   } else if (finalData?.data?.progress) {
+      //     console.log(finalData?.data?.progress);
+          
+      //   }
+      // });
     } else {
-      const chunkIndices = Object.keys(data).map(Number);
-      const maxIndex = Math.max(...chunkIndices);
-      const tempChunkArr: Uint8Array = new Uint8Array(maxIndex + 1);
-      chunkIndices.forEach((index) => (tempChunkArr[index] = data[index]));
-      setfileChunkArr((prevFileData: Uint8Array | undefined) => {
-        const prevFileLen = prevFileData ? prevFileData.length : 0;
-        const newArray = new Uint8Array(prevFileLen + tempChunkArr.length);
-        console.log(tempChunkArr);
-        if (prevFileData) {
-          newArray.set(prevFileData, 0); // Copy existing data
-          tempChunkArr.forEach(
-            (byte, index) => (newArray[prevFileData.length + index] = byte)
-          );
-        } else {
-          return tempChunkArr;
-        }
-        setdownloadFile(newArray);
-        return newArray;
-      });
+      setdownloadFile("sjdf");
+      workerRef.current?.postMessage(data);
     }
   }
+
+  workerRef.current?.addEventListener("message", (event: any) => {
+    if (event.data?.progress !== undefined) {
+      // setfileDownloadProgress(Number(event.data.progress));
+      console.log(event.data.progress);
+      setfileDownloadProgress(Number(event.data.progress));
+    } else if (event.data?.blob) {
+      console.log(event);
+      setdownloadFile(event.data?.blob);
+      console.log(event.data?.timeTaken);
+    }
+  });
+
+  // const handleDownloadFile = () => {
+  //   const blob = downloadFile;
+  //   const stream = blob.stream();
+  //   const fileStream = streamSaver.createWriteStream(fileNameState);
+  //   stream.pipeTo(fileStream);
+  // };
 
   const handleWebRTCUpload = () => {
     const peer = peerRef.current;
@@ -274,6 +333,13 @@ const ShareCard = () => {
 
       if (offset == 0) {
         setfileSending(true);
+        const fileInfo = {
+          info: true,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+        };
+        peer.write(JSON.stringify(fileInfo));
       }
 
       reader.onload = (event) => {
@@ -283,7 +349,7 @@ const ShareCard = () => {
 
           // Send the chunk data along with the progress information
           const progressPayload = {
-            chunk: uint8ArrayChunk,
+            chunk: Array.from(uint8ArrayChunk),
             progress: (offset / file.size) * 100,
           };
           console.log(progressPayload);
@@ -296,7 +362,14 @@ const ShareCard = () => {
             readAndSendChunk(); // Continue reading and sending chunks
           } else {
             // Signal the end of the file transfer
-            peer.write(JSON.stringify({ done: true, fileName: file.name }));
+            peer.write(
+              JSON.stringify({
+                done: true,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+              })
+            );
             setfileUploadProgress(100);
             setfileSending(false);
             toast.success("Sended file successfully");

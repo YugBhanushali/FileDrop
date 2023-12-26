@@ -19,7 +19,7 @@ const FileDownload = ({
   fileRawData,
 }: fileDownloadProps) => {
   const handleFileDownload = (fileRawData: any, tempFile: any) => {
-    const blob = new Blob([fileRawData]);
+    const blob = fileRawData;
     saveAs(blob, tempFile);
   };
   return (
