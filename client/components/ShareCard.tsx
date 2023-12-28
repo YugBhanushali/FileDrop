@@ -117,6 +117,11 @@ const ShareCard = () => {
             username: 'openrelayproject',
             credential: 'openrelayproject'
           },
+          {
+            urls: 'turn:numb.viagenie.ca',
+            credential: 'muazkh',
+            username: 'webrtc@live.com'
+        },
         ],
       },
     });
