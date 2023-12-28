@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 const express = require("express");
 const http = require("http");
