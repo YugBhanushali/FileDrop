@@ -1,9 +1,9 @@
+import dotenv from "dotenv";
+dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const dotenv = require("dotenv");
-dotenv.config();
 
 const app = express();
 
