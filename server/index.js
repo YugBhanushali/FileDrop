@@ -12,9 +12,11 @@ app.get("/",(req,res)=>{
   res.send("hello from server")
 })
 
+const allowedOrigins = ["http://localhost:3000"];
+
 const io = new Server(httpServer,{
   cors: {
-    origin: "http://localhost:3000"
+    origin: allowedOrigins
   }
 })
 
@@ -41,6 +43,7 @@ io.on("connection",(socket)=>{
 
     usersToUniquedID.set(user,uniqueId)
     uniqueIdTousers.set(uniqueId,user)
+    console.log("New User added");
     for (let [key, value] of usersToUniquedID) {
       console.log(key + " = " + value);
       }
@@ -93,7 +96,7 @@ io.on("connection",(socket)=>{
 })
 
 
-httpServer.listen(8000,()=>{
+httpServer.listen(process.env.PORT || 8000,()=>{
   console.log("Listining on 8000");
 })
 
