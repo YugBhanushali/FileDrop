@@ -1,8 +1,8 @@
-// // import { createServer } from "http";
-// // import { Server } from "socket.io";
 const express = require("express")
 const http = require("http")
 const {Server} = require('socket.io')
+const dotenv = require('dotenv');
+dotenv.config();
 
 const app = express()
 
@@ -12,7 +12,7 @@ app.get("/",(req,res)=>{
   res.send("hello from server")
 })
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = ["http://localhost:3000",process.env.URL];
 
 const io = new Server(httpServer,{
   cors: {
@@ -97,6 +97,6 @@ io.on("connection",(socket)=>{
 
 
 httpServer.listen(process.env.PORT || 8000,()=>{
-  console.log("Listining on 8000");
+  console.log(`Listining on ${process.env.PORT ? process.env.PORT : "8000"}`);
 })
 
