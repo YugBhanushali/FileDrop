@@ -20,7 +20,7 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const socket = useMemo(() => {
     
-    return io("http://localhost:8000/");
+    return io(String(process.env.NEXT_SOCKET_SERVER_URL));
   }, []);
   const [peerState, setpeerState] = useState<any>()
   const [SocketId, setSocketId] = useState<any>(socket)

@@ -1,8 +1,6 @@
 "use client";
 import React, {
-  useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -16,7 +14,7 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Check, CopyIcon, Download, File, Upload } from "lucide-react";
+import { Check, CopyIcon} from "lucide-react";
 import { useSocket } from "@/context/SocketProvider";
 import toast from "react-hot-toast";
 import { TailSpin } from "react-loader-spinner";
