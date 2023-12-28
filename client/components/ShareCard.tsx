@@ -1,5 +1,11 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Card,
@@ -18,7 +24,6 @@ import Peer from "simple-peer";
 import FileUpload from "./FileUpload";
 import FileUploadBtn from "./FileUploadBtn";
 import FileDownload from "./FileDownload";
-import streamSaver from "streamsaver";
 
 const ShareCard = () => {
   const userDetails = useSocket();
@@ -27,6 +32,7 @@ const ShareCard = () => {
   const [isCopied, setisCopied] = useState(false);
   const [currentConnection, setcurrentConnection] = useState(false);
   const peerRef = useRef<any>();
+  const [userId, setuserId] = useState<any>();
   const [signalingData, setsignalingData] = useState<any>();
   const [acceptCaller, setacceptCaller] = useState(false);
   const [terminateCall, setterminateCall] = useState(false);
@@ -36,16 +42,17 @@ const ShareCard = () => {
   const [fileUploadProgress, setfileUploadProgress] = useState<number>(0);
   const [fileDownloadProgress, setfileDownloadProgress] = useState<number>(0);
   const [fileNameState, setfileNameState] = useState<any>();
-  const [fileChunkArr, setfileChunkArr] = useState<Uint8Array>();
   const [fileSending, setfileSending] = useState(false);
   const [fileReceiving, setfileReceiving] = useState(false);
-  const [chunk, setchunk] = useState<Array<number>>();
+
+  // used web worker for expensive work
   const workerRef = useRef<Worker>();
 
   const addUserToSocketDB = () => {
     console.log("add user");
     userDetails.socket.on("connect", () => {
       console.log(userDetails.socket.id, userDetails.userId);
+      setuserId(userDetails.userId);
       userDetails.socket.emit("details", {
         socketId: userDetails.socket.id,
         uniqueId: userDetails.userId,
@@ -76,6 +83,20 @@ const ShareCard = () => {
       setpartnerId(data.from);
     });
 
+    workerRef.current?.addEventListener("message", (event: any) => {
+      if (event.data?.progress) {
+        console.log(event.data.progress);
+        setfileDownloadProgress(Number(event.data.progress));
+      } else if (event.data?.blob) {
+        setdownloadFile(event.data?.blob);
+        // Reset progress on the receiver's side
+        setfileDownloadProgress(0);
+        setfileReceiving(false);
+        console.log(event.data?.blob);
+        console.log(event.data?.timeTaken);
+      }
+    });
+
     return () => {
       peerRef.current?.destroy();
       if (peerRef.current) {
@@ -83,6 +104,7 @@ const ShareCard = () => {
         setacceptCaller(false);
         userDetails.socket.off();
       }
+      workerRef.current?.terminate();
     };
   }, []);
 
@@ -125,17 +147,9 @@ const ShareCard = () => {
       if (parsedData.chunk) {
         // Handle the received chunk
         handleReceivingData(parsedData.chunk);
-
-        // Update progress on the receiver's side
-        const receivedProgress = parsedData.progress;
-        setfileDownloadProgress(receivedProgress);
       } else if (parsedData.done) {
         // Handle the end of the file transfer
         handleReceivingData(parsedData);
-        setfileChunkArr(undefined);
-        // Reset progress on the receiver's side
-        setfileDownloadProgress(0);
-        setfileReceiving(false);
         toast.success("File received successfully");
       } else if (parsedData.info) {
         handleReceivingData(parsedData);
@@ -160,6 +174,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
+      setpartnerId("")
       userDetails.setpeerState(undefined);
     });
 
@@ -196,17 +211,10 @@ const ShareCard = () => {
       if (parsedData.chunk) {
         // Handle the received chunk
         handleReceivingData(parsedData.chunk);
-
-        // Update progress on the receiver's side
-        const receivedProgress = parsedData.progress;
-        // setfileDownloadProgress(receivedProgress);
       } else if (parsedData.done) {
         // Handle the end of the file transfer
         handleReceivingData(parsedData);
-        setfileChunkArr(undefined);
-        // Reset progress on the receiver's side
-        // setfileDownloadProgress(0);
-        // setfileReceiving(false);
+        toast.success("File received successfully");
       } else if (parsedData.info) {
         handleReceivingData(parsedData);
       }
@@ -223,6 +231,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
+      setpartnerId("")
       userDetails.setpeerState(undefined);
     });
 
@@ -286,40 +295,11 @@ const ShareCard = () => {
       setfileNameState(parsed.fileName);
       const fileSize = parsed.fileSize;
       workerRef.current?.postMessage("download");
-      // workerRef.current?.addEventListener("message", (finalData: any) => {
-      //   if (finalData.data?.blob) {
-      //     console.log(finalData);
-      //     setdownloadFile(finalData.data?.blob);
-      //     console.log(finalData.data?.timeTaken);
-      //   } else if (finalData?.data?.progress) {
-      //     console.log(finalData?.data?.progress);
-          
-      //   }
-      // });
     } else {
       setdownloadFile("sjdf");
       workerRef.current?.postMessage(data);
     }
   }
-
-  workerRef.current?.addEventListener("message", (event: any) => {
-    if (event.data?.progress !== undefined) {
-      // setfileDownloadProgress(Number(event.data.progress));
-      console.log(event.data.progress);
-      setfileDownloadProgress(Number(event.data.progress));
-    } else if (event.data?.blob) {
-      console.log(event);
-      setdownloadFile(event.data?.blob);
-      console.log(event.data?.timeTaken);
-    }
-  });
-
-  // const handleDownloadFile = () => {
-  //   const blob = downloadFile;
-  //   const stream = blob.stream();
-  //   const fileStream = streamSaver.createWriteStream(fileNameState);
-  //   stream.pipeTo(fileStream);
-  // };
 
   const handleWebRTCUpload = () => {
     const peer = peerRef.current;
@@ -329,6 +309,8 @@ const ShareCard = () => {
 
     const readAndSendChunk = () => {
       const chunk = file.slice(offset, offset + chunkSize);
+      console.log(offset, chunkSize + offset);
+
       const reader = new FileReader();
 
       if (offset == 0) {
@@ -399,12 +381,15 @@ const ShareCard = () => {
               <div className="flex flex-col gap-y-1">
                 <Label htmlFor="name">My ID</Label>
                 <div className="flex flex-row justify-left items-center space-x-2">
-                  <Input
+                  {/* <Input
                     disabled
                     id="name"
                     value={userDetails.userId}
                     placeholder="Name of your project"
-                  />
+                  /> */}
+                  <div className="flex border rounded-md px-3 py-2 text-sm h-10 w-full">
+                    {userId ? userId : "Loading..."}
+                  </div>
                   <Button
                     variant="outline"
                     type="button"
@@ -428,15 +413,17 @@ const ShareCard = () => {
                     placeholder="ID"
                     onChange={(e) => setpartnerId(e.target.value)}
                     disabled={terminateCall}
+                    value={partnerId}
                   />
                   <Button
                     variant="outline"
                     type="button"
                     className="p-4 w-[160px]"
                     onClick={handleConnectionMaking}
+                    disabled={terminateCall}
                   >
                     {isLoading ? (
-                      <TailSpin color="black" height={18} width={18} />
+                      <TailSpin color="white" height={18} width={18} />
                     ) : (
                       <p>Connect</p>
                     )}

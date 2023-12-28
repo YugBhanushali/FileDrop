@@ -16,6 +16,7 @@
     "classnames": "^2.3.2",
     "clsx": "^2.0.0",
     "file-saver": "^2.0.5",
+    "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.299.0",
     "nanoid": "^5.0.4",
     "next": "14.0.4",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
+    "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
