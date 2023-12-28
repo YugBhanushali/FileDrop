@@ -366,26 +366,16 @@ const ShareCard = () => {
 
   return (
     <>
-      <Card className="w-[450px]">
+      <Card className="sm:max-w-[450px] max-w-[95%]">
         <CardHeader>
-          {/* <CardTitle>Create project</CardTitle>
-          <CardDescription>
-            Deploy your new project in one-click.
-          </CardDescription> */}
         </CardHeader>
-        <CardContent>
+        <CardContent >
           <form>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col gap-y-1">
                 <Label htmlFor="name">My ID</Label>
                 <div className="flex flex-row justify-left items-center space-x-2">
-                  {/* <Input
-                    disabled
-                    id="name"
-                    value={userDetails.userId}
-                    placeholder="Name of your project"
-                  /> */}
-                  <div className="flex border rounded-md px-3 py-2 text-sm h-10 w-full">
+                  <div className="flex border rounded-md px-3 py-2 text-sm h-10 w-full bg-muted">
                     {userId ? userId : "Loading..."}
                   </div>
                   <Button
