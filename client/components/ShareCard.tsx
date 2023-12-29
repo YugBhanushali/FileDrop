@@ -1,9 +1,5 @@
 "use client";
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   Card,
@@ -14,7 +10,7 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Check, CopyIcon} from "lucide-react";
+import { Check, CopyIcon } from "lucide-react";
 import { useSocket } from "@/context/SocketProvider";
 import toast from "react-hot-toast";
 import { TailSpin } from "react-loader-spinner";
@@ -22,6 +18,13 @@ import Peer from "simple-peer";
 import FileUpload from "./FileUpload";
 import FileUploadBtn from "./FileUploadBtn";
 import FileDownload from "./FileDownload";
+import ShareLink from "./ShareLink";
+import { useSearchParams } from "next/navigation";
+
+type fileProp = {
+  fileName: string;
+  fileData: any;
+};
 
 const ShareCard = () => {
   const userDetails = useSocket();
@@ -42,6 +45,9 @@ const ShareCard = () => {
   const [fileNameState, setfileNameState] = useState<any>();
   const [fileSending, setfileSending] = useState(false);
   const [fileReceiving, setfileReceiving] = useState(false);
+  const [filesDownloaded, setfilesDownloaded] = useState<fileProp[]>([]);
+  const [name, setname] = useState<any>();
+  const searchParams = useSearchParams();
 
   // used web worker for expensive work
   const workerRef = useRef<Worker>();
@@ -74,6 +80,10 @@ const ShareCard = () => {
 
     addUserToSocketDB();
 
+    if (searchParams.get("code")) {
+      setpartnerId(String(searchParams.get("code")));
+    }
+
     userDetails.socket.on("signaling", (data: any) => {
       console.log(data);
       setacceptCaller(true);
@@ -92,6 +102,18 @@ const ShareCard = () => {
         setfileReceiving(false);
         console.log(event.data?.blob);
         console.log(event.data?.timeTaken);
+        console.log(fileNameState);
+        // setfilesDownloaded((prev: fileProp[]) => {
+        //   const temp: fileProp = {
+        //     fileName: fileNameState ? fileNameState : "hello",
+        //     fileData: event.data?.blob,
+        //   };
+        //   if (prev) {
+        //     return [...prev, temp];
+        //   } else {
+        //     return [temp];
+        //   }
+        // });
       }
     });
 
@@ -113,15 +135,15 @@ const ShareCard = () => {
       config: {
         iceServers: [
           {
-            urls: 'turn:openrelay.metered.ca:80',
-            username: 'openrelayproject',
-            credential: 'openrelayproject'
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject",
           },
           {
-            urls: 'turn:numb.viagenie.ca',
-            credential: 'muazkh',
-            username: 'webrtc@live.com'
-        },
+            urls: "turn:numb.viagenie.ca",
+            credential: "muazkh",
+            username: "webrtc@live.com",
+          },
         ],
       },
     });
@@ -172,7 +194,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
-      setpartnerId("")
+      setpartnerId("");
       userDetails.setpeerState(undefined);
     });
 
@@ -229,7 +251,7 @@ const ShareCard = () => {
       toast.error(`${partnerId} disconnected`);
       setfileUpload(false);
       setterminateCall(false);
-      setpartnerId("")
+      setpartnerId("");
       userDetails.setpeerState(undefined);
     });
 
@@ -240,7 +262,12 @@ const ShareCard = () => {
 
   const handleConnectionMaking = () => {
     setisLoading(true);
-    callUser();
+    if (partnerId && partnerId.length == 10) {
+      callUser();
+    } else {
+      setisLoading(false);
+      toast.error("Enter correct other's Id");
+    }
   };
 
   const handleFileUploadBtn = () => {
@@ -288,9 +315,12 @@ const ShareCard = () => {
         status: "fileInfo",
         fileSize: data.fileSize,
       });
+      setfileNameState(data.fileName);
+      setname(data.fileName);
+      console.log(data.fileName);
     } else if (data.done) {
       const parsed = data;
-      setfileNameState(parsed.fileName);
+      // setfileNameState(parsed.fileName);
       const fileSize = parsed.fileSize;
       workerRef.current?.postMessage("download");
     } else {
@@ -367,9 +397,8 @@ const ShareCard = () => {
   return (
     <>
       <Card className="sm:max-w-[450px] max-w-[95%]">
-        <CardHeader>
-        </CardHeader>
-        <CardContent >
+        <CardHeader></CardHeader>
+        <CardContent>
           <form>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col gap-y-1">
@@ -390,6 +419,7 @@ const ShareCard = () => {
                       <CopyIcon size={15} />
                     )}
                   </Button>
+                  <ShareLink userCode={userDetails.userId} />
                 </div>
               </div>
 
@@ -467,12 +497,32 @@ const ShareCard = () => {
 
               {/* download file */}
               {downloadFile ? (
-                <FileDownload
-                  fileName={fileNameState}
-                  fileReceivingStatus={fileReceiving}
-                  fileProgress={fileDownloadProgress}
-                  fileRawData={downloadFile}
-                />
+                <>
+                  <FileDownload
+                    fileName={fileNameState}
+                    fileReceivingStatus={fileReceiving}
+                    fileProgress={fileDownloadProgress}
+                    fileRawData={downloadFile}
+                  />
+                  {/* <>
+                    {filesDownloaded
+                      ? filesDownloaded.map((file, index) => {
+                          console.log(file);
+                          return (
+                            <>
+                              <FileDownload
+                                key={index}
+                                fileName={file?.fileName}
+                                fileReceivingStatus={false}
+                                fileProgress={0}
+                                fileRawData={file?.fileData}
+                              />
+                            </>
+                          );
+                        })
+                      : null}
+                  </> */}
+                </>
               ) : null}
             </div>
           </form>
