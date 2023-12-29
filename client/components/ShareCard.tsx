@@ -332,7 +332,7 @@ const ShareCard = () => {
   const handleWebRTCUpload = () => {
     const peer = peerRef.current;
     const file = fileUpload[0];
-    const chunkSize = 16 * 1024; // 16 KB chunks (you can adjust this size)
+    const chunkSize = 64 * 1024; // 16 KB chunks (you can adjust this size)
     let offset = 0;
 
     const readAndSendChunk = () => {
