@@ -21,7 +21,6 @@ import FileDownload from "./FileDownload";
 import ShareLink from "./ShareLink";
 import { useSearchParams } from "next/navigation";
 
-
 const ShareCard = () => {
   const userDetails = useSocket();
   const [partnerId, setpartnerId] = useState("");
@@ -351,8 +350,8 @@ const ShareCard = () => {
   return (
     <>
       <Card className="sm:max-w-[450px] max-w-[95%]">
-        <CardHeader></CardHeader>
-        <CardContent>
+        {/* <CardHeader></CardHeader> */}
+        <CardContent className="mt-8">
           <form>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col gap-y-1">
@@ -378,7 +377,7 @@ const ShareCard = () => {
               </div>
 
               <div className="flex flex-col gap-y-1">
-                <Label htmlFor="name">Peer's ID</Label>
+                <Label htmlFor="name">Peer`s ID</Label>
                 <div className="flex flex-row justify-left items-center space-x-2">
                   <Input
                     id="name"
@@ -396,12 +395,12 @@ const ShareCard = () => {
                   >
                     {isLoading ? (
                       <>
-                      <div className="scale-0 hidden dark:flex dark:scale-100">
-                        <TailSpin color='white' height={18} width={18} />
-                      </div>
-                      <div className="scale-100 flex dark:scale-0 dark:hidden">
-                        <TailSpin color='black' height={18} width={18} />
-                      </div>
+                        <div className="scale-0 hidden dark:flex dark:scale-100">
+                          <TailSpin color="white" height={18} width={18} />
+                        </div>
+                        <div className="scale-100 flex dark:scale-0 dark:hidden">
+                          <TailSpin color="black" height={18} width={18} />
+                        </div>
                       </>
                     ) : (
                       <p>Connect</p>
@@ -478,7 +477,7 @@ const ShareCard = () => {
                 className=" bg-green-500 text-white hover:bg-green-400"
                 onClick={acceptUser}
               >
-                Getting call from {signalingData.from}
+                Click here to receive call from {signalingData.from}
               </Button>
             </div>
           </CardFooter>

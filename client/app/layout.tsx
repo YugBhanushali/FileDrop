@@ -8,9 +8,9 @@ import { keywordsForMetaData } from "@/utils/constants";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "FastDrop",
+  title: "FileDrop",
   description:
-    "FastDrop: Swift P2P file sharing and real-time chat. Experience seamless, secure data exchange with our WebRTC-powered Next.js app. Join us for instant messaging and efficient file transfer in a modern, user-friendly environment.",
+    "FileDrop: Swift P2P file sharing and real-time chat. Experience seamless, secure data exchange with our WebRTC-powered Next.js app. Join us for instant messaging and efficient file transfer in a modern, user-friendly environment.",
   authors: [
     {
       name: "Yug Bhanushali",
