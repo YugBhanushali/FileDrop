@@ -21,10 +21,6 @@ import FileDownload from "./FileDownload";
 import ShareLink from "./ShareLink";
 import { useSearchParams } from "next/navigation";
 
-type fileProp = {
-  fileName: string;
-  fileData: any;
-};
 
 const ShareCard = () => {
   const userDetails = useSocket();
@@ -45,7 +41,6 @@ const ShareCard = () => {
   const [fileNameState, setfileNameState] = useState<any>();
   const [fileSending, setfileSending] = useState(false);
   const [fileReceiving, setfileReceiving] = useState(false);
-  const [filesDownloaded, setfilesDownloaded] = useState<fileProp[]>([]);
   const [name, setname] = useState<any>();
   const searchParams = useSearchParams();
 
@@ -103,17 +98,6 @@ const ShareCard = () => {
         console.log(event.data?.blob);
         console.log(event.data?.timeTaken);
         console.log(fileNameState);
-        // setfilesDownloaded((prev: fileProp[]) => {
-        //   const temp: fileProp = {
-        //     fileName: fileNameState ? fileNameState : "hello",
-        //     fileData: event.data?.blob,
-        //   };
-        //   if (prev) {
-        //     return [...prev, temp];
-        //   } else {
-        //     return [temp];
-        //   }
-        // });
       }
     });
 
@@ -266,7 +250,7 @@ const ShareCard = () => {
       callUser();
     } else {
       setisLoading(false);
-      toast.error("Enter correct other's Id");
+      toast.error("Enter correct Peer's Id");
     }
   };
 
@@ -279,36 +263,6 @@ const ShareCard = () => {
     console.log(fileUpload);
   };
 
-  //for the file which have small size around less than 20mb
-  // function handleReceivingData(data: any) {
-  //   if (data.done) {
-  //     const parsed = data;
-  //     setfileNameState(parsed.fileName);
-  //   } else {
-  //     const chunkIndices = Object.keys(data).map(Number);
-  //     const maxIndex = Math.max(...chunkIndices);
-  //     const tempChunkArr: Uint8Array = new Uint8Array(maxIndex + 1);
-  //     chunkIndices.forEach((index) => (tempChunkArr[index] = data[index]));
-  //     setfileChunkArr((prevFileData: Uint8Array | undefined) => {
-  //       const prevFileLen = prevFileData ? prevFileData.length : 0;
-  //       const newArray = new Uint8Array(prevFileLen + tempChunkArr.length);
-  //       console.log(newArray.length * newArray.BYTES_PER_ELEMENT);
-  //       console.log(data);
-  //       if (prevFileData) {
-  //         newArray.set(prevFileData, 0); // Copy existing data
-  //         tempChunkArr.forEach(
-  //           (byte, index) => (newArray[prevFileData.length + index] = byte)
-  //         );
-  //       } else {
-  //         return tempChunkArr;
-  //       }
-  //       setdownloadFile(newArray);
-  //       return newArray;
-  //     });
-  //   }
-  // }
-
-  // for the files which has large sizes
   function handleReceivingData(data: any) {
     if (data.info) {
       workerRef.current?.postMessage({
@@ -424,7 +378,7 @@ const ShareCard = () => {
               </div>
 
               <div className="flex flex-col gap-y-1">
-                <Label htmlFor="name">Others ID</Label>
+                <Label htmlFor="name">Peer's ID</Label>
                 <div className="flex flex-row justify-left items-center space-x-2">
                   <Input
                     id="name"
@@ -436,12 +390,19 @@ const ShareCard = () => {
                   <Button
                     variant="outline"
                     type="button"
-                    className="p-4 w-[160px]"
+                    className="flex items-center justify-center p-4 w-[160px]"
                     onClick={handleConnectionMaking}
                     disabled={terminateCall}
                   >
                     {isLoading ? (
-                      <TailSpin color="white" height={18} width={18} />
+                      <>
+                      <div className="scale-0 hidden dark:flex dark:scale-100">
+                        <TailSpin color='white' height={18} width={18} />
+                      </div>
+                      <div className="scale-100 flex dark:scale-0 dark:hidden">
+                        <TailSpin color='black' height={18} width={18} />
+                      </div>
+                      </>
                     ) : (
                       <p>Connect</p>
                     )}
@@ -504,24 +465,6 @@ const ShareCard = () => {
                     fileProgress={fileDownloadProgress}
                     fileRawData={downloadFile}
                   />
-                  {/* <>
-                    {filesDownloaded
-                      ? filesDownloaded.map((file, index) => {
-                          console.log(file);
-                          return (
-                            <>
-                              <FileDownload
-                                key={index}
-                                fileName={file?.fileName}
-                                fileReceivingStatus={false}
-                                fileProgress={0}
-                                fileRawData={file?.fileData}
-                              />
-                            </>
-                          );
-                        })
-                      : null}
-                  </> */}
                 </>
               ) : null}
             </div>
