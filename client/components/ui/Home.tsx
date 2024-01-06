@@ -7,7 +7,7 @@ import InfoToolTip from "./InfoToolTip";
 const Home = () => {
   return (
     <div className="flex flex-col mt-[30vh] justify-center items-center">
-      <h1 className="text-3xl w-[410px] text-center font-extrabold tracking-wide">
+      <h1 className="sm:text-3xl text-xl sm:w-[410px] text-center font-extrabold tracking-wide">
         {/* Share your files 📁 by making P2P 🤝 connection and you can chat 💬 too. */}
         Share Files Seamlessly 🌐, Connect P2P 🤝, and Chat Instantly 💬 with
         FileDrop!
