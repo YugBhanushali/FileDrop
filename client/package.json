@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "node": "node server.js"
+    "lint": "next lint"
   },
+  "author": "Yug Bhanushali",
+  "repository": "https://github.com/YugBhanushali/FileDrop",
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -19,7 +20,6 @@
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.3.2",
     "clsx": "^2.0.0",
-    "express": "^4.18.2",
     "file-saver": "^2.0.5",
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.299.0",
@@ -32,7 +32,6 @@
     "react-hot-toast": "^2.4.1",
     "react-loader-spinner": "^6.1.4",
     "simple-peer": "^9.11.1",
-    "socket.io": "^4.7.3",
     "socket.io-client": "^4.7.2",
     "streamsaver": "^2.0.6",
     "tailwind-merge": "^2.1.0",
