@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import { keywordsForMetaData } from "@/utils/constants";
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     },
   ],
   keywords: keywordsForMetaData,
-  icons:{
-    icon:"./fastdroplight.png"
-  }
+  icons: {
+    icon: "./fastdroplight.png",
+  },
 };
 
 export default function RootLayout({
@@ -40,8 +40,8 @@ export default function RootLayout({
         >
           <Navbar />
           {children}
-          <Analytics/>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
