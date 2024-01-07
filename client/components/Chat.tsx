@@ -24,7 +24,7 @@ const Chat = () => {
         peer.send(JSON.stringify(messageData));
       }
     }
-    console.log(Socket.peerState);
+    // console.log(Socket.peerState);
   };
 
   // Set up event listeners for incoming messages
@@ -47,7 +47,7 @@ const Chat = () => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         inputRef.current.focus();
-        console.log("Done");
+        // console.log("Done");
       } else if (e.key === "Enter") {
         btnRef.current.click();
       }
@@ -74,7 +74,7 @@ const Chat = () => {
                     className={`flex flex-wrap sm:max-w-[200px] max-w-[150px] text-sm rounded-3xl px-3 py-1 ${
                       message.sender === "me"
                         ? "bg-blue-500 text-white"
-                        : "bg-zinc-700"
+                        : "bg-zinc-700  text-white"
                     }`}
                   >
                     {message.text}

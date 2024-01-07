@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import Image from "next/image";
 import fastDropDark from "../public/fastdrop.png"
 import fastDropLight from "../public/fastdroplight.png"
+import Link from "next/link";
 
 const Navbar = () => {
   return (
@@ -18,7 +19,9 @@ const Navbar = () => {
         <div className="flex gap-x-2">
           <div>
             <Button type="button" className="p-3" variant="ghost">
-              <GithubIcon size={18}/>
+              <Link href={"https://github.com/YugBhanushali/FileDrop"}>
+                <GithubIcon size={18}/>
+              </Link>
             </Button>
           </div>
           <div>

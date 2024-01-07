@@ -365,6 +365,7 @@ const ShareCard = () => {
                     type="button"
                     className="p-4"
                     onClick={() => CopyToClipboard(userDetails?.userId)}
+                    disabled={userId ? false : true}
                   >
                     {isCopied ? (
                       <Check size={15} color="green" />
@@ -372,7 +373,7 @@ const ShareCard = () => {
                       <CopyIcon size={15} />
                     )}
                   </Button>
-                  <ShareLink userCode={userDetails.userId} />
+                  <ShareLink userCode={userId} />
                 </div>
               </div>
 

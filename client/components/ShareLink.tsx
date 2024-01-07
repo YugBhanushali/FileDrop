@@ -26,7 +26,11 @@ const ShareLink = ({ userCode }: { userCode: string }) => {
     <>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" className="p-3">
+          <Button
+            variant="outline"
+            className="p-3"
+            disabled={userCode ? false : true}
+          >
             <Share size={18} />
           </Button>
         </DialogTrigger>
@@ -43,8 +47,8 @@ const ShareLink = ({ userCode }: { userCode: string }) => {
                 <QRCodeSVG
                   value={`https://fast-drop.vercel.app/transfer?code=${userCode}`}
                   size={128}
-                  bgColor={theme==="dark" ? "#000000" : "#ffffff"}
-                  fgColor={theme==="dark" ? "#ffffff" : "#000000"}
+                  bgColor={theme === "dark" ? "#000000" : "#ffffff"}
+                  fgColor={theme === "dark" ? "#ffffff" : "#000000"}
                   level={"L"}
                   includeMargin={false}
                 />

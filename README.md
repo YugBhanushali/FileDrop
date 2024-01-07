@@ -1,6 +1,9 @@
 # FileDrop
 
-FileDrop is a collaborative file-sharing application that enables users to seamlessly share files with peers while engaging in real-time chat. Built with Next.js, TypeScript, Node.js, Socket.IO, WebRTC, and shadcn/ui, FileDrop provides a modern and efficient solution for peer-to-peer file exchange.
+
+![ZipURL](./client/public/filedrop-demo.png)
+
+[FileDrop](https://file-drops.vercel.app/) is a collaborative file-sharing application that enables users to seamlessly share files with peers while engaging in real-time chat. Built with Next.js, TypeScript, Node.js, Socket.IO, WebRTC, and shadcn/ui, FileDrop provides a modern and efficient solution for peer-to-peer file exchange.
 
 ## Features
 
