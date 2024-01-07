@@ -47,9 +47,9 @@ const ShareCard = () => {
   const workerRef = useRef<Worker>();
 
   const addUserToSocketDB = () => {
-    console.log("add user");
+    // console.log("add user");
     userDetails.socket.on("connect", () => {
-      console.log(userDetails.socket.id, userDetails.userId);
+      // console.log(userDetails.socket.id, userDetails.userId);
       setuserId(userDetails.userId);
       userDetails.socket.emit("details", {
         socketId: userDetails.socket.id,
@@ -79,7 +79,7 @@ const ShareCard = () => {
     }
 
     userDetails.socket.on("signaling", (data: any) => {
-      console.log(data);
+      // console.log(data);
       setacceptCaller(true);
       setsignalingData(data);
       setpartnerId(data.from);
@@ -87,16 +87,16 @@ const ShareCard = () => {
 
     workerRef.current?.addEventListener("message", (event: any) => {
       if (event.data?.progress) {
-        console.log(event.data.progress);
+        // console.log(event.data.progress);
         setfileDownloadProgress(Number(event.data.progress));
       } else if (event.data?.blob) {
         setdownloadFile(event.data?.blob);
         // Reset progress on the receiver's side
         setfileDownloadProgress(0);
         setfileReceiving(false);
-        console.log(event.data?.blob);
-        console.log(event.data?.timeTaken);
-        console.log(fileNameState);
+        // console.log(event.data?.blob);
+        // console.log(event.data?.timeTaken);
+        // console.log(fileNameState);
       }
     });
 
@@ -142,7 +142,7 @@ const ShareCard = () => {
     });
 
     peer.on("data", (data) => {
-      console.log(data);
+      // console.log(data);
       setfileReceiving(true);
       // Parse received data
       const parsedData = JSON.parse(data);
@@ -170,7 +170,7 @@ const ShareCard = () => {
     });
 
     peer.on("close", () => {
-      console.log(`${partnerId} disconnected`);
+      // console.log(`${partnerId} disconnected`);
       // Handle the disconnection, e.g., remove UI elements, update state, etc.
       setpartnerId("");
       setcurrentConnection(false);
@@ -227,7 +227,7 @@ const ShareCard = () => {
     peer.signal(signalingData.signalData);
 
     peer.on("close", () => {
-      console.log(`${partnerId} disconnected`);
+      // console.log(`${partnerId} disconnected`);
       // Handle the disconnection, e.g., remove UI elements, update state, etc.
       setpartnerId("");
       setcurrentConnection(false);
@@ -259,7 +259,7 @@ const ShareCard = () => {
 
   const handleFileChange = (e: any) => {
     setfileUpload(e.target.files);
-    console.log(fileUpload);
+    // console.log(fileUpload);
   };
 
   function handleReceivingData(data: any) {
@@ -270,7 +270,7 @@ const ShareCard = () => {
       });
       setfileNameState(data.fileName);
       setname(data.fileName);
-      console.log(data.fileName);
+      // console.log(data.fileName);
     } else if (data.done) {
       const parsed = data;
       // setfileNameState(parsed.fileName);
@@ -290,7 +290,7 @@ const ShareCard = () => {
 
     const readAndSendChunk = () => {
       const chunk = file.slice(offset, offset + chunkSize);
-      console.log(offset, chunkSize + offset);
+      // console.log(offset, chunkSize + offset);
 
       const reader = new FileReader();
 
@@ -315,7 +315,7 @@ const ShareCard = () => {
             chunk: Array.from(uint8ArrayChunk),
             progress: (offset / file.size) * 100,
           };
-          console.log(progressPayload);
+          // console.log(progressPayload);
           peer.write(JSON.stringify(progressPayload));
           setfileUploadProgress((offset / file.size) * 100);
 
