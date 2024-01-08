@@ -143,11 +143,12 @@ const ShareCard = () => {
 
     peer.on("data", (data) => {
       // console.log(data);
-      setfileReceiving(true);
+      
       // Parse received data
       const parsedData = JSON.parse(data);
 
       if (parsedData.chunk) {
+        setfileReceiving(true);
         // Handle the received chunk
         handleReceivingData(parsedData.chunk);
       } else if (parsedData.done) {
@@ -208,10 +209,10 @@ const ShareCard = () => {
 
     peer.on("data", (data) => {
       // Parse received data
-      setfileReceiving(true);
       const parsedData = JSON.parse(data);
-
+      
       if (parsedData.chunk) {
+        setfileReceiving(true);
         // Handle the received chunk
         handleReceivingData(parsedData.chunk);
       } else if (parsedData.done) {

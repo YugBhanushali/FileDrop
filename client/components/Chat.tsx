@@ -20,7 +20,11 @@ const Chat = () => {
       // Send the message to the partner using the peer connection
       const peer = Socket.peerState;
       if (peer) {
-        const messageData = { text: newMessage, sender: "other" };
+        const messageData = {
+          type: "messages",
+          text: newMessage,
+          sender: "other",
+        };
         peer.send(JSON.stringify(messageData));
       }
     }
