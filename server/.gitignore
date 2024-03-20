@@ -1,1 +1,22 @@
-/.env
+# Ignore node_modules directory
+node_modules/
+
+# Ignore npm debug log
+npm-debug.log
+
+# Ignore environment-specific files
+.env
+
+# Ignore built files
+/build
+
+# Ignore IDE or editor-specific files
+.vscode/
+.idea/
+
+# Ignore log files
+*.log
+
+# Ignore dependency files
+package-lock.json
+yarn.lock
