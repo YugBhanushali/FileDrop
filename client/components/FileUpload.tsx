@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import { Upload } from "lucide-react";
 import { Progress } from "./ui/progress";
+import { truncateString } from "@/utils/funtions";
 
 type fileUploadProps = {
   fileName: string;
@@ -19,7 +20,7 @@ const FileUpload = ({
   return (
     <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
       <div className="flex justify-between items-center">
-        <div className="flex">{fileName}</div>
+        <div className="flex">{truncateString(fileName)}</div>
         <div className="flex">
           <Button
             type="button"
@@ -36,9 +37,7 @@ const FileUpload = ({
 
       {showProgress ? (
         <div>
-          <Progress value={fileProgress} 
-          className="h-1" 
-          />
+          <Progress value={fileProgress} className="h-1" />
         </div>
       ) : null}
     </div>

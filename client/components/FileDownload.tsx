@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Download } from "lucide-react";
 import { saveAs } from "file-saver";
 import { Progress } from "./ui/progress";
+import { truncateString } from "@/utils/funtions";
 
 type fileDownloadProps = {
   fileReceivingStatus: boolean;
@@ -31,7 +32,7 @@ const FileDownload = ({
         <div className="flex flex-col border rounded-lg  px-3 py-3 text-sm w-full gap-y-2">
           <div className="flex justify-between items-center">
             <div className="flex">
-              {fileReceivingStatus ? "Receiving..." : fileName}
+              {fileReceivingStatus ? "Receiving..." : truncateString(fileName)}
             </div>
             <div className="flex">
               <Button
@@ -47,10 +48,7 @@ const FileDownload = ({
 
           {fileReceivingStatus ? (
             <div>
-              <Progress
-                value={fileProgress}
-                className="h-1"
-              />
+              <Progress value={fileProgress} className="h-1" />
             </div>
           ) : null}
         </div>

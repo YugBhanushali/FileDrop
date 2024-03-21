@@ -18,7 +18,7 @@ const ShareLink = ({ userCode }: { userCode: string }) => {
   const { theme } = useTheme();
   const handleCopyClick = () => {
     navigator.clipboard.writeText(
-      `https://fast-drop.vercel.app/transfer?code=${userCode}`
+      `https://file-drops.vercel.app/transfer?code=${userCode}`
     );
     toast.success("Link Copied");
   };
@@ -58,7 +58,6 @@ const ShareLink = ({ userCode }: { userCode: string }) => {
                   id="link"
                   defaultValue={`https://fast-drop.vercel.app/transfer?code=${userCode}`}
                   readOnly
-                  className=" selection:bg-zinc-900 dark:selection:bg-white"
                 />
                 <Button
                   type="button"

@@ -68,6 +68,7 @@ const ShareCard = () => {
   }
 
   useEffect(() => {
+    // @ts-ignore test
     workerRef.current = new Worker(
       new URL("../utils/worker.ts", import.meta.url)
     );
@@ -99,6 +100,7 @@ const ShareCard = () => {
         // console.log(fileNameState);
       }
     });
+    console.log(userDetails.socket);
 
     return () => {
       peerRef.current?.destroy();
@@ -143,7 +145,7 @@ const ShareCard = () => {
 
     peer.on("data", (data) => {
       // console.log(data);
-      
+
       // Parse received data
       const parsedData = JSON.parse(data);
 
@@ -210,7 +212,7 @@ const ShareCard = () => {
     peer.on("data", (data) => {
       // Parse received data
       const parsedData = JSON.parse(data);
-      
+
       if (parsedData.chunk) {
         setfileReceiving(true);
         // Handle the received chunk
