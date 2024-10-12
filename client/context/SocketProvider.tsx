@@ -31,7 +31,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [peerState, setpeerState] = useState<any>();
   const [SocketId, setSocketId] = useState<any>(socket);
   const userId = useMemo(() => {
-    return customAlphabet("1234567890", 4);
+    return customAlphabet("ABCDEFGHI", 4);
   }, []);
   return (
     <SocketContext.Provider
