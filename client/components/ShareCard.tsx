@@ -248,7 +248,7 @@ const ShareCard = () => {
 
   const handleConnectionMaking = () => {
     setisLoading(true);
-    if (partnerId && partnerId.length == 10) {
+    if (partnerId && partnerId.length == 4) {
       callUser();
     } else {
       setisLoading(false);
